@@ -1,0 +1,43 @@
+<html>
+
+<meta http-equiv="content-type" content="text/html;charset=GBK" />
+	<script language="javascript">
+	    /* This function is invoked by the activity */
+
+		function test() {
+   //var result = "{\"geetest_challenge\":\"asdd\",\"geetest_validate\":\"dgdgg\"}";
+
+		    var code = "1";	 
+		    var result1 = {"geetest_challenge":"asdd","geetest_validate":"dgdgg"};
+		    var result = json2str(result1);
+		    var meassage = "失败";
+		   window.android.gtCallBack(code,result,meassage);
+
+
+		}
+		
+		
+	function json2str(o) {
+             var arr = [];
+             var fmt = function(s) {
+                 if (typeof s == 'object' && s != null) return json2str(s);
+                 return /^(string|number)$/.test(typeof s) ? "'" + s + "'" : s;
+              }
+             for (var i in o) arr.push("'" + i + "':" + fmt(o[i]));
+             return '{' + arr.join(',') + '}';
+          }
+
+		
+	</script>
+	<body>
+	    <!-- Calls into the javascript interface for the activity -->
+	    <a onClick="test()"><div style="width:80px;
+			margin:0px auto;
+			padding:10px;
+			text-align:center;
+			border:2px solid #202020;" >
+				<img id="droid" src="android_normal.png"/><br>
+				Click me!
+		</div></a>
+	</body>
+</html>

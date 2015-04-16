@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="GBK">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="renderer" content="webkit">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+  <title>极验验证移动版</title>
+</head>
+<body>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
+  .wrapper {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .embed {
+    float: none !important;
+  }
+
+  .wrapper .top {
+    background-color: #eeeeee;
+    padding: 0 8px;
+    height: 45px;
+    z-index: 1;
+    position: relative;
+    text-align: center;
+    border-bottom: 1px solid #a7a7aa;
+    font-weight: 500;
+  }
+
+  .wrapper .title {
+    line-height: 45px;
+  }
+
+  .exit {
+    background-image: url('img/return.png');
+    -moz-background-size: 12px auto;
+    -o-background-size: 12px auto;
+    -webkit-background-size: 12px auto;
+    background-size: 12px auto;
+    width: 12px;
+    height: 22px;
+    display: inline-block;
+    vertical-align: middle;
+    position: absolute;
+    left: 8px;
+    top: 11px;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+
+  .exit:active {
+    background-image: url('img/return_hover.png');
+  }
+</style>
+<div class="wrapper">
+  <div class="top">
+    <a class="exit" href="javascript:android.gtCloseWindow();"></a>
+    <span class="title">请通过验证</span>
+  </div>
+  <div class="body" id="content">
+    <script>
+      (function () {
+        var s = document.createElement("script");
+        s.async = true;
+        var width = document.body.offsetWidth;
+        s.src = "http://api.geetest.com/get.php?" + window.location.href.split('?')[1] + "&width=" + width;
+        document.getElementById("content").appendChild(s);
+      })();
+      window.gt_custom_ajax = function (result, id, message) {
+        if (window.android && window.android.gtCallBack) {
+          if (result) {
+            window.android.gtCallBack("1", "{
+              geetest_challenge: document.querySelector('.geetest_challenge').value,
+              geetest_validate: document.querySelector('.geetest_validate').value,
+              geetest_seccode: document.querySelector('.geetest_seccode').value
+            }", message)
+          }
+          else {
+            window.android.gtCallBack(0, {
+              geetest_challenge: document.querySelector('.geetest_challenge').value
+            }, message);
+          }
+        }
+      }
+    </script>
+  </div>
+</div>
+</body>
+</html>
