@@ -59,6 +59,7 @@ public class MainActivity extends Activity {
 				sdkInitData.setChallenge_id(geetestLib.getChallengeId());
 				sdkInitData.setContext(context);
 				openGtTest(sdkInitData);
+
 			} else {
 				// TODO 使用自己的验证码体系来进行判断。或者不做任何处理
 				Toast.makeText(
@@ -70,7 +71,8 @@ public class MainActivity extends Activity {
 	}
 
 	public void openGtTest(SdkInit initData) {
-		GtDialog dialog = new GtDialog(initData);
+		GtDialog dialog = GtDialog.newInstance(initData);
+
 
 		dialog.setGtListener(new GtListener() {
 

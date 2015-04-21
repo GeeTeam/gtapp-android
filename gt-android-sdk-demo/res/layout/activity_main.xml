@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@drawable/background_login"
+    android:background="#ffffff"
     android:orientation="vertical" >
 
     <!-- padding 内边距   layout_margin 外边距  		android:layout_alignParentTop 布局的位置是否处于顶部 -->
@@ -12,60 +12,85 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_margin="15dip"
-        android:background="@drawable/background_login_div"
         android:padding="15dip" >
 
-        <!-- 账号 -->
+        
+        <ImageView        
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_centerHorizontal="true"
+             android:layout_marginTop="30dp"
+             android:id="@+id/logo"
+             android:src="@drawable/big_logo"/>
+        
+        <RelativeLayout        
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_centerHorizontal="true"
+             android:layout_marginTop="20dp"
+             android:id="@+id/namely"
+             android:layout_below="@+id/logo"
+             android:background="@drawable/edit_bg">
+             
+             <TextView
+	             android:layout_width="match_parent"
+	             android:layout_height="wrap_content"            
+			     android:paddingLeft="20dp"
+	             android:text="用户名"
+	             android:layout_marginRight="10dp"
+	             android:layout_centerVertical="true"/>
+             <ImageView
+	             android:layout_width="wrap_content"
+	             android:layout_height="wrap_content"            
+	             android:layout_alignParentRight="true"
+	             android:src="@drawable/delete"
+	             android:layout_marginRight="0dp"
+	             android:layout_centerVertical="true">
+                 
+             </ImageView>
+        </RelativeLayout>
+        <RelativeLayout        
+             android:layout_width="match_parent"
+             android:layout_height="wrap_content"
+             android:layout_centerHorizontal="true"
+             android:layout_marginTop="20dp"
+             android:layout_below="@+id/namely"
+             android:id="@+id/pwdly"
+             android:background="@drawable/edit_bg">
+             
+             <TextView
+	             android:layout_width="match_parent"
+	             android:layout_height="wrap_content"            
+			     android:paddingLeft="20dp"
+	             android:text="******"
+	             android:layout_marginRight="10dp"
+	             android:layout_centerVertical="true"/>
 
-        <TextView
-            android:id="@+id/login_user_input"
-            style="@style/normalText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginTop="5dp"
-            android:text="@string/login_label_username" />
+        </RelativeLayout>
+        
+        
+        
+            <TextView
+	             android:layout_width="fill_parent"
+	             android:layout_height="wrap_content"            
+			     android:paddingLeft="0dp"
+			     android:gravity="center"
+	             android:text="演示页面无需填写内容，直接登录"
+	             android:textColor="#60e891"
+	             android:layout_below="@id/pwdly"
+	             android:id="@+id/tip"
+	             android:layout_marginTop="10dp"
+	             android:layout_centerVertical="true"/>
 
-        <EditText
-            android:id="@+id/username_edit"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/login_user_input"
-            android:background="#FFFFFFFF"
-            android:hint="@string/login_username_hint"
-            android:inputType="text"
-            android:singleLine="true" />
-        <!-- 密码 text -->
-
-        <TextView
-            android:id="@+id/login_password_input"
-            style="@style/normalText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/username_edit"
-            android:hint="@string/login_username_hint"
-            android:layout_marginTop="3dp"
-            android:text="@string/login_label_password" />
-
-        <EditText
-            android:id="@+id/password_edit"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/login_password_input"
-            android:background="#FFFFFFFF"
-            android:inputType="textPassword"
-            android:singleLine="true" />
-        <!-- 登录button -->
 
         <Button
             android:id="@+id/btn_gtapp_sdk_demo_dlg"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignRight="@id/password_edit"
-            android:layout_below="@id/password_edit"
-            android:layout_marginTop="6dp"
-            android:background="@drawable/select_blue_button"
-            android:text="@string/login_label_signin" />
+            android:layout_width="fill_parent"
+            android:layout_height="45dp"
+			android:layout_below="@id/tip"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/selector_button"
+        />
     </RelativeLayout>
 
 </LinearLayout>

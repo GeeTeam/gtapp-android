@@ -21,15 +21,31 @@ import android.widget.Toast;
 public class GtDialog extends Dialog {
 
 	SdkInit initData = new SdkInit();
+	
+	private static GtDialog mDialog;
+	
+	public static GtDialog newInstance(SdkInit initData){
+		if(mDialog==null){
+			mDialog = new GtDialog(initData);
+		}
+		return mDialog;
+	}
 
-	public GtDialog(Context context) {
+	private GtDialog(Context context) {
 		super(context);
 		// TODO Auto-generated constructor stub
 	}
 
-	public GtDialog(SdkInit initData) {
+	private GtDialog(SdkInit initData) {
 		super(initData.getContext());
 		this.initData = initData;
+	}
+	
+	@Override
+	public void onDetachedFromWindow() {
+		// TODO Auto-generated method stub
+		super.onDetachedFromWindow();
+		mDialog = null;
 	}
 
 	private WebView webView;
