@@ -11,6 +11,7 @@ Demo演示
     #. gt-android-sdk-demo
          调用android-sdk的演示app程序。
 #. 直接运行GtAppSdkDemo项目
+#. 演示项目提供了完整的一次验证，并将客户端验证结果向示例的客户服务器上发起二次验证的完整通讯过程。
 
 使用以上步骤，用户可以一分钟运行Demo示例。
 
@@ -31,6 +32,7 @@ Demo演示
 ==================
 
 函数：
+
 .. code::
 
     gtResult(boolean success, String result) 
