@@ -27,6 +27,33 @@ Demo演示
 #. 在项目三处TODO中替换成用户自已的处理代码。
 
 
+回调函数及返回值
+==================
+
+函数：
+.. code::
+
+    gtResult(boolean success, String result) 
+
+返回值：
+
+1. success
+    成功或者失败的值
+#. result
+    详细的返回信息，用于向客户服务器提交之后的SDK二次验证信息
+
+        .. code::
+
+           {
+            "geetest_challenge": "5a8c21e206f5f7ba4fa630acf269d0ec4z", 
+            "geetest_validate": "f0f541006215ac784859e29ec23d5b97", 
+            "geetest_seccode": "f0f541006215ac784859e29ec23d5b97|jordan"
+            }
+
+
+    
+
+
 发布日志
 ===================
 
