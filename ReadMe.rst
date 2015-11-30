@@ -5,13 +5,9 @@ Demo演示
 ===================
 
 1. 从Github中下载最新发布版项目到本地工作空间
-#. 使用Eclipse+ADT的开发环境Import工作空间的两个项目
-    1.  gt-android-sdk
-         极验验证NativeApp的SDK，是一个Android Library
-    #. gt-android-sdk-demo
-         调用android-sdk的演示app程序。
-#. 直接运行GtAppSdkDemo项目
-#. 演示项目提供了完整的一次验证，并将客户端验证结果向示例的客户服务器上发起二次验证的完整通讯过程。
+#. 使用Android Studio IDE打开该项目
+#. 其中gt-sdk是一个模块，供demo调用
+#. 该项目是一个demo，直接点击运行可以执行，展示了gt-sdk里面的接口的使用方式
 
 使用以上步骤，用户可以一分钟运行Demo示例。
 
@@ -23,9 +19,9 @@ Demo演示
 假设用户自建项目名称为：CustomerProject
 
 1. 在极验官方主页www.geetest.com注册账号并申请相应的应用公钥，id:{{id}}
-#. 将gt-android-sdk项目和CustomerProject项目Import到同一个工作空间
-#. 将gt-android-sdk项目以Android Library的方式进行引用 右键项目-Properties-Android-Library-Add即可
-#. 在项目三处TODO中替换成用户自已的处理代码。
+#. 将gt-sdk目录复制到CustomerProject项目下
+#. 将gt-sdk模块添加为CustomerProject项目的一个模块
+#. 根据demo中的调用方式，将相应处的url和处理方式进行修改
 
 
 回调函数及返回值
@@ -58,6 +54,12 @@ Demo演示
 
 发布日志
 ===================
+
+2.15.11.30.1
+---------------
+1. 添加faiback功能
+2. 使用Android Studio编写项目
+3. 去掉了不需要的部分代码
 
 2.15.4.16.1
 ---------------
