@@ -20,7 +20,7 @@ import android.widget.Toast;
  */
 public class GtDialog extends Dialog {
 
-    private String baseURL = "http://static.geetest.com/static/appweb/android-index.html";
+    private String baseURL = "http://static.geetest.com/static/appweb/app-index-v1.html";
 
     private String captcha;
     private String challenge;
@@ -77,10 +77,17 @@ public class GtDialog extends Dialog {
 
         setContentView(webView);
 
-        LayoutParams layoutParams = webView.getLayoutParams();
+        final LayoutParams layoutParams = webView.getLayoutParams();
 
-        layoutParams.height = LayoutParams.MATCH_PARENT;
-        layoutParams.width = LayoutParams.MATCH_PARENT;
+        int height = DimenTool.getHeightPx(getContext());
+        int width = DimenTool.getWidthPx(getContext());
+
+        if (height < width) {
+            width = height * 3 / 4;
+        }
+
+        layoutParams.width = width * 4 / 5;
+        layoutParams.height = LayoutParams.WRAP_CONTENT;
         webView.setLayoutParams(layoutParams);
         
         WebSettings settings = webView.getSettings();
@@ -105,30 +112,6 @@ public class GtDialog extends Dialog {
 
         webView.loadUrl(gt_mobile_req_url);
         GeetestLib.log_v(gt_mobile_req_url);
-
-        webView.setWebChromeClient(new WebChromeClient() {
-
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                // TODO Auto-generated method stub
-                super.onProgressChanged(view, newProgress);
-                if (newProgress == 100) {
-                    webView.getLayoutParams().height = LayoutParams.MATCH_PARENT;
-                    webView.getLayoutParams().width = LayoutParams.MATCH_PARENT;
-                    webView.setLayoutParams(webView.getLayoutParams());
-                }
-            }
-        });
-
-        webView.setWebViewClient(new WebViewClient() {
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                // TODO Auto-generated method stub
-                super.onPageFinished(view, url);
-            }
-
-        });
     }
 
     public class JSInterface {
