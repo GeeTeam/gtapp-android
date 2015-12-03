@@ -81,12 +81,18 @@ public class GtDialog extends Dialog {
 
         int height = DimenTool.getHeightPx(getContext());
         int width = DimenTool.getWidthPx(getContext());
+        float scale = getContext().getResources().getDisplayMetrics().density;
+        final int WIDTH = 290;
 
         if (height < width) {
             width = height * 3 / 4;
         }
+        width = width * 4 / 5;
+        if ((int)(width / scale + 0.5f) < WIDTH) {
+            width = (int)((WIDTH - 0.5f) * scale);
+        }
 
-        layoutParams.width = width * 4 / 5;
+        layoutParams.width = width;
         layoutParams.height = LayoutParams.WRAP_CONTENT;
         webView.setLayoutParams(layoutParams);
         
