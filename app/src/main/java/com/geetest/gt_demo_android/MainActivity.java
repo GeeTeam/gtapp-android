@@ -23,10 +23,10 @@ public class MainActivity extends Activity {
     private GeetestLib gt = new GeetestLib();
 
     // 设置获取id，challenge，success的URL，需替换成自己的服务器URL
-    private String captchaURL = "http://testcenter.geetest.com/webapi/apis/start-mobile-captcha/";
+    private String captchaURL = "http://webapi.geetest.com/apis/start-mobile-captcha/";
 
     // 设置二次验证的URL，需替换成自己的服务器URL
-    private String validateURL = "http://testcenter.geetest.com/webapi/apis/mobile-server-validate/";
+    private String validateURL = "http://webapi.geetest.com/apis/mobile-server-validate/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
