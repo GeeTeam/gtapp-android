@@ -20,7 +20,7 @@ import android.widget.Toast;
  */
 public class GtDialog extends Dialog {
 
-    private String baseURL = "http://static.geetest.com/static/appweb/app-index-v1.html";
+    private String baseURL = "http://static.geetest.com/static/appweb/app-index.html";
 
     private String captcha;
     private String challenge;
@@ -109,7 +109,7 @@ public class GtDialog extends Dialog {
         String gt_mobile_req_url = baseURL
                 + "?gt=" + this.captcha
                 + "&challenge=" + this.challenge
-                + "&offline=" + this.offline
+                + "&success=" + !this.offline
                 + "&product=" + this.product
                 + "&debug=" + this.debug
                 + "&mobileInfo=" + mobile_info;
