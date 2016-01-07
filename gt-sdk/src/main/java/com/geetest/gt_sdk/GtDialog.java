@@ -113,7 +113,7 @@ public class GtDialog extends Dialog {
                 + "&success=" + !this.offline
                 + "&product=" + this.product
                 + "&debug=" + this.debug
-//                + "&width=" + (int)(width / scale + 0.5f)
+                + "&width=" + (int)(width / scale + 0.5f)
                 + "&mobileInfo=" + mobile_info;
 
         GeetestLib.log_v(gt_mobile_req_url);
