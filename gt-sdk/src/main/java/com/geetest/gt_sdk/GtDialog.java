@@ -34,6 +34,7 @@ public class GtDialog extends Dialog {
         this.captcha = captcha;
         this.challenge = challenge;
         this.offline = !success;
+
     }
 
     public void setBaseURL(String url) {
@@ -93,7 +94,7 @@ public class GtDialog extends Dialog {
         }
 
         layoutParams.width = width;
-        layoutParams.height = LayoutParams.WRAP_CONTENT;
+        layoutParams.height = 0;
         webView.setLayoutParams(layoutParams);
         
         WebSettings settings = webView.getSettings();
@@ -112,12 +113,27 @@ public class GtDialog extends Dialog {
                 + "&success=" + !this.offline
                 + "&product=" + this.product
                 + "&debug=" + this.debug
+//                + "&width=" + (int)(width / scale + 0.5f)
                 + "&mobileInfo=" + mobile_info;
 
         GeetestLib.log_v(gt_mobile_req_url);
 
         webView.loadUrl(gt_mobile_req_url);
         GeetestLib.log_v(gt_mobile_req_url);
+
+        webView.setWebChromeClient(new WebChromeClient() {
+
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+
+                super.onProgressChanged(view, newProgress);
+
+                if (newProgress == 100) {
+                    webView.getLayoutParams().height = LayoutParams.WRAP_CONTENT;
+                    webView.setLayoutParams(webView.getLayoutParams());
+                }
+            }
+        });
     }
 
     public class JSInterface {
