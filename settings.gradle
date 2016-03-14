@@ -1,1 +1,1 @@
-include ':app', ':gt-sdk'
+include ':app', ':sdk'

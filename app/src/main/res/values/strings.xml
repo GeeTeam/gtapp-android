@@ -6,7 +6,7 @@
     <string name="user_password">******</string>
     <string name="login">登  录</string>
     <string name="logo_desc">极验logo</string>
-    <string name="note">演示页面无需填写内容，直接登录</string>
+    <string name="note">演示页面无需填写内容，直接点击登录</string>
     <string name="settings">设置</string>
 
 </resources>
