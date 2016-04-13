@@ -3,6 +3,7 @@ package com.geetest.android.demo;
 import android.os.Bundle;
 import android.view.View;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.view.Window;
@@ -19,6 +20,8 @@ import com.geetest.android.sdk.GtDialog.GtListener;
 public class MainActivity extends Activity {
 
     private Context context = MainActivity.this;
+    //因为可能用户当时所处在低速高延迟网络，所以异步请求可能在后台用时很久才获取到验证的数据。可以自己设计这个状态指示器, demo仅作演示。
+    private ProgressDialog progressDialog;
 
     // 创建验证码实例
     private Geetest captcha = new Geetest(
@@ -41,7 +44,10 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onClick(View v) {
+                        progressDialog = ProgressDialog.show(context, null, "Loading", true, false);
+
                         new GtAppDlgTask().execute();
+
                     }
                 });
     }
@@ -78,7 +84,7 @@ public class MainActivity extends Activity {
 
     public void openGtTest(Context ctx, String id, String challenge, boolean success) {
 
-        GtDialog dialog = new GtDialog(ctx, id, challenge, success);
+        final GtDialog dialog = new GtDialog(ctx, id, challenge, success);
 
         // 启用debug可以在webview上看到验证过程的一些数据
         // dialog.setDebug(true);
@@ -113,7 +119,6 @@ public class MainActivity extends Activity {
                         e.printStackTrace();
                     }
 
-
                 } else {
 
                     toastMsg("client captcha failed:" + result);
@@ -125,14 +130,20 @@ public class MainActivity extends Activity {
 
                 toastMsg("Close geetest windows");
             }
+
+            @Override
+            public void gtCallReady() {
+                progressDialog.dismiss();
+                toastMsg("geetest finish load");
+            }
+
         });
 
-        dialog.show();
     }
 
     private void toastMsg(String msg) {
 
-        Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
+        Toast.makeText(getBaseContext(), msg, Toast.LENGTH_SHORT).show();
 
     }
 
