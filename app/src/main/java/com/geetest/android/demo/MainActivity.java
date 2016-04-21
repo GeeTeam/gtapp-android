@@ -1,16 +1,20 @@
 package com.geetest.android.demo;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import android.os.Bundle;
+import android.os.Looper;
 import android.view.View;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.view.Window;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
-import java.util.HashMap;
-import java.util.Map;
+
 import org.json.JSONObject;
 
 import com.geetest.android.sdk.Geetest;
@@ -20,10 +24,11 @@ import com.geetest.android.sdk.GtDialog.GtListener;
 public class MainActivity extends Activity {
 
     private Context context = MainActivity.this;
-    //因为可能用户当时所处在低速高延迟网络，所以异步请求可能在后台用时很久才获取到验证的数据。可以自己设计这个状态指示器, demo仅作演示。
+    //因为可能用户当时所处在低速高延迟网络，所以异步请求可能在后台用时很久才获取到验证的数据。可以自己设计状态指示器, demo仅作演示。
     private ProgressDialog progressDialog;
+    private GtAppDlgTask mGtAppDlgTask;
 
-    // 创建验证码实例
+    // 创建验证码网络管理器实例
     private Geetest captcha = new Geetest(
 
             // 设置获取id，challenge，success的URL，需替换成自己的服务器URL
@@ -44,12 +49,43 @@ public class MainActivity extends Activity {
 
                     @Override
                     public void onClick(View v) {
-                        progressDialog = ProgressDialog.show(context, null, "Loading", true, false);
 
-                        new GtAppDlgTask().execute();
+                        GtAppDlgTask gtAppDlgTask = new GtAppDlgTask();
+                        mGtAppDlgTask = gtAppDlgTask;
+                        mGtAppDlgTask.execute();
 
+                        progressDialog = ProgressDialog.show(context, null, "Loading", true, true);
+                        progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                            @Override
+                            public void onCancel(DialogInterface dialog) {
+                                toastMsg("user cancel progress dialog");
+                                mGtAppDlgTask.cancel(true);
+                                captcha.cancelReadConnection();
+                            }
+                        });
                     }
                 });
+
+        captcha.setTimeout(5000);
+
+        captcha.setGeetestListener(new Geetest.GeetestListener() {
+            @Override
+            public void readContentTimeout() {
+                mGtAppDlgTask.cancel(true);
+                //TODO 获取验证参数超时
+                progressDialog.dismiss();
+                //Looper.prepare() & Looper.loop(): 在当前线程并没有绑定Looper时返回为null, 可以与toastMsg()一同在正式版本移除
+                Looper.prepare();
+                toastMsg("read content time out");
+                Looper.loop();
+            }
+
+            @Override
+            public void submitPostDataTimeout() {
+                //TODO 提交二次验证超时
+                toastMsg("submit error");
+            }
+        });
     }
 
     class GtAppDlgTask extends AsyncTask<Void, Void, Boolean> {
@@ -65,19 +101,19 @@ public class MainActivity extends Activity {
 
             if (result) {
 
-                openGtTest(context, captcha.getGt(), captcha.getChallenge(), true);
+                // 根据captcha.getSuccess()的返回值 自动推送正常或者离线验证
+                openGtTest(context, captcha.getGt(), captcha.getChallenge(), captcha.getSuccess());
 
             } else {
-                // 极验服务器暂时性宕机：
+
+                // TODO 极验服务宕机或不可用,使用备用验证
                 Toast.makeText(
                         getBaseContext(),
                         "Geetest Server is Down.",
                         Toast.LENGTH_LONG).show();
 
-                // 选择1. 继续使用极验（failback模式），去掉下行注释
-                // openGtTest(context, captcha.getCaptcha(), captcha.getChallenge(), false);
+                // 执行此处网站主的备用验证码方案
 
-                // 选择2. 使用您备用的验证码
             }
         }
     }
@@ -89,6 +125,13 @@ public class MainActivity extends Activity {
         // 启用debug可以在webview上看到验证过程的一些数据
         // dialog.setDebug(true);
 
+        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                //TODO 取消验证
+                toastMsg("user close the geetest.");
+            }
+        });
 
         dialog.setGtListener(new GtListener() {
 
@@ -112,6 +155,7 @@ public class MainActivity extends Activity {
 
                         String response = captcha.submitPostData(params, "utf-8");
 
+                        //TODO 验证通过, 获取二次验证响应, 根据响应判断验证是否通过完整验证
                         toastMsg("server captcha :" + response);
 
                     } catch (Exception e) {
@@ -120,21 +164,29 @@ public class MainActivity extends Activity {
                     }
 
                 } else {
-
+                    //TODO 验证失败
                     toastMsg("client captcha failed:" + result);
                 }
             }
 
             @Override
-            public void closeGt() {
+            public void gtCallClose() {
 
-                toastMsg("Close geetest windows");
+                toastMsg("close geetest windows");
             }
 
             @Override
-            public void gtCallReady() {
+            public void gtCallReady(Boolean status) {
+
                 progressDialog.dismiss();
-                toastMsg("geetest finish load");
+
+                if (status) {
+                    //TODO 验证加载完成
+                    toastMsg("geetest finish load");
+                }else {
+                    //TODO 验证加载超时,未准备完成
+                    toastMsg("there's a network jam");
+                }
             }
 
         });

@@ -2,7 +2,9 @@ package com.geetest.android.sdk;
 
 import android.text.TextUtils;
 import android.util.Log;
+
 import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
@@ -15,6 +17,10 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.net.ssl.HttpsURLConnection;
 
 public class Geetest {
 
@@ -23,7 +29,15 @@ public class Geetest {
 
     private String gt;
     private String challenge;
+    private int success;
     private CookieManager cookieManager;
+    private HttpURLConnection mReadConnection;
+    private HttpURLConnection mSubmitConneciton;
+    private Timer timer;
+    private int responseCode;
+    private int mTimeout = 10000;//默认10000ms
+
+    public Boolean isOperating;
 
     public Geetest(String captchaURL, String validateURL) {
         this.captchaURL = captchaURL;
@@ -38,24 +52,53 @@ public class Geetest {
         return this.challenge;
     }
 
-    public boolean checkServer() {
+    public boolean getSuccess() {
+        if (success == 1) {
+            return true;
+        }
+        return false;
+    }
 
-        boolean result = false;
+    public void setTimeout(int timeout) {
+        mTimeout = timeout;
+    }
+
+    public void cancelReadConnection() {
+        if (isOperating) {
+            mReadConnection.disconnect();
+        }
+    }
+
+    public interface GeetestListener {
+        void readContentTimeout();
+        void submitPostDataTimeout();
+    }
+
+    private GeetestListener geetestListener;
+
+    public void setGeetestListener(GeetestListener listener) {
+        geetestListener = listener;
+    }
+
+    public boolean checkServer() {
 
         try {
 
             String info = readContentFromGet(captchaURL);
 
-            JSONObject config = new JSONObject(info);
+            if (info.length() > 0) {
 
-            int success = config.getInt("success");
+                Log.i("Geetest", "checkServer: " + info);
 
-            if (success == 1) {
+                JSONObject config = new JSONObject(info);
 
                 gt = config.getString("gt");
                 challenge = config.getString("challenge");
+                success = config.getInt("success");
 
-                result = true;
+                if (gt.length() == 32) {
+                    return true;
+                }
 
             }
 
@@ -64,20 +107,38 @@ public class Geetest {
             e.printStackTrace();
         }
 
-        return result;
+        return false;
     }
 
     private String readContentFromGet(String getURL) throws IOException {
 
+        isOperating = true;
+
+        final StringBuffer sBuffer = new StringBuffer();
+
+        timer = new Timer();
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (responseCode != HttpURLConnection.HTTP_OK || sBuffer.toString().length() == 0) {
+                    mReadConnection.disconnect();
+                    isOperating = false;
+                    if (geetestListener != null) {
+                        geetestListener.readContentTimeout();
+                    }
+                }
+            }
+        };
+        timer.schedule(timerTask, mTimeout, 1);
+
         URL url = new URL(getURL);
 
-        StringBuffer sBuffer = new StringBuffer();
-
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        HttpURLConnection readConnection = (HttpURLConnection)url.openConnection();
+        mReadConnection = readConnection;
 
         cookieManager = new CookieManager();
 
-        Map<String, List<String>> headerFields = connection.getHeaderFields();
+        Map<String, List<String>> headerFields = readConnection.getHeaderFields();
         List<String> cookiesHeader = headerFields.get("Set-Cookie");
 
         if(cookiesHeader != null) {
@@ -88,15 +149,15 @@ public class Geetest {
 
         try {
 
-            connection.setConnectTimeout(1000);
+            readConnection.setConnectTimeout((int)(mTimeout/2));
 
-            connection.setReadTimeout(1000);
+            readConnection.setReadTimeout((int) (mTimeout/2));
 
-            connection.connect();
+            readConnection.connect();
 
             byte[] buf = new byte[1024];
 
-            InputStream inStream = connection.getInputStream();
+            InputStream inStream = readConnection.getInputStream();
 
             for (int n; (n = inStream.read(buf)) != -1;) {
 
@@ -106,50 +167,99 @@ public class Geetest {
 
             inStream.close();
 
-            connection.disconnect();
+            responseCode = readConnection.getResponseCode();
+
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                timer.cancel();
+                timer.purge();
+                return sBuffer.toString();
+            }
+
+            if (responseCode == HttpsURLConnection.HTTP_CLIENT_TIMEOUT || responseCode == -1) {
+                if (geetestListener != null) {
+                    geetestListener.readContentTimeout();
+                }
+            }
 
         } catch (EOFException e) {
 
             e.printStackTrace();
 
+        } finally {
+            mReadConnection.disconnect();
+            isOperating = false;
         }
-
-        return sBuffer.toString();
+        return "";
     }
 
     public String submitPostData(Map<String, String> params, String encode) {
+
+        isOperating = true;
+
+        timer = new Timer();
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    mSubmitConneciton.disconnect();
+                    isOperating = false;
+                    if (geetestListener != null) {
+                        geetestListener.submitPostDataTimeout();
+                    }
+                }
+            }
+        };
+        timer.schedule(timerTask, mTimeout, 1);
 
         byte[] data = getRequestData(params, encode).toString().getBytes();
 
         try {
             URL url = new URL(validateURL);
-            HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection submitConnection = (HttpURLConnection) url.openConnection();
+            mSubmitConneciton = submitConnection;
             if(cookieManager.getCookieStore().getCookies().size() > 0) {
-                httpURLConnection.setRequestProperty("Cookie",
+                submitConnection.setRequestProperty("Cookie",
                         TextUtils.join(";", cookieManager.getCookieStore().getCookies()));
             }
-            httpURLConnection.setConnectTimeout(3000);
-            httpURLConnection.setDoInput(true);
-            httpURLConnection.setDoOutput(true);
-            httpURLConnection.setRequestMethod("POST");
-            httpURLConnection.setUseCaches(false);
+            submitConnection.setConnectTimeout(mTimeout);
+            submitConnection.setDoInput(true);
+            submitConnection.setDoOutput(true);
+            submitConnection.setRequestMethod("POST");
+            submitConnection.setUseCaches(false);
 
-            httpURLConnection.setRequestProperty("Content-Type",
+            submitConnection.setRequestProperty("Content-Type",
                     "application/x-www-form-urlencoded");
 
-            httpURLConnection.setRequestProperty("Content-Length",
+            submitConnection.setRequestProperty("Content-Length",
                     String.valueOf(data.length));
 
-            OutputStream outputStream = httpURLConnection.getOutputStream();
+            OutputStream outputStream = submitConnection.getOutputStream();
             outputStream.write(data);
 
-            int response = httpURLConnection.getResponseCode();
+            int response = submitConnection.getResponseCode();
+
             if (response == HttpURLConnection.HTTP_OK) {
-                InputStream inptStream = httpURLConnection.getInputStream();
+                timer.cancel();
+                timer.purge();
+                InputStream inptStream = submitConnection.getInputStream();
                 return dealResponseResult(inptStream);
             }
+
+            if (response == -1) {
+                if (geetestListener != null) {
+                    geetestListener.submitPostDataTimeout();
+                }
+            }
+
         } catch (IOException e) {
+
             e.printStackTrace();
+
+        } finally {
+
+            mSubmitConneciton.disconnect();
+
+            isOperating = false;
         }
         return "";
     }

@@ -1,21 +1,26 @@
 package com.geetest.android.sdk;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.lang.Runnable;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.util.LogPrinter;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -38,12 +43,17 @@ public class GtDialog extends Dialog {
     private String challenge;
     private Boolean success;
     private String product = "embed";
+    private String language = "zh-cn";
     private Boolean debug = false;
 
     private Dialog mDialog = this;
     private Context context;
     private int mWidth;
+    private int mTimeout = 10000;//默认10000ms
     private GtWebview webView;
+    private Timer timer;
+
+    public Boolean isShowing = false;
 
     public void setBaseURL(String url) {
         this.baseURL = url;
@@ -57,10 +67,23 @@ public class GtDialog extends Dialog {
         this.product = product;
     }
 
+    //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn"
+    public void  setLanguage(String lang) {
+        language = lang;
+    }
+
+    public void setTimeout(int timeout) {
+        mTimeout = timeout;
+    }
+
     @Override
     public void onDetachedFromWindow() {
 
         super.onDetachedFromWindow();
+    }
+
+    public void stopLoading() {
+        webView.stopLoading();
     }
 
     public GtDialog (Context context, String id, String challenge, Boolean success) {
@@ -100,10 +123,14 @@ public class GtDialog extends Dialog {
         String gt_mobile_req_url = baseURL
                 + "?gt=" + this.id
                 + "&challenge=" + this.challenge
-                + "&success=" + (!this.success ? 0 : 1)
-                + "&product=" + this.product
+                + "&success=" + (this.success ? 1 : 0)
+                + "mType=" + Build.MODEL
+                + "&osType=" + "android"
+                + "&osVerInt=" + Build.VERSION.RELEASE
+                + "&gsdkVerCode=" + "2.16.4.21.1"
+                + "&lang=" + this.language //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn"
                 + "&debug=" + this.debug
-                + "&width=" + (int)(width / scale + 0.5f);
+                + "&width=" + (int)(width / scale + 1.5f);//1.5f: fix blank on the webview
 
         webView.loadUrl(gt_mobile_req_url);
 
@@ -113,9 +140,9 @@ public class GtDialog extends Dialog {
 
     public interface GtListener {
         //通知native验证已准备完毕
-        void gtCallReady();
+        void gtCallReady(Boolean status); // true准备完成/false为准备完成
         //通知native关闭验证
-        void closeGt();
+        void gtCallClose();
         //通知native验证结果，并准备二次验证
         void gtResult(boolean success, String result);
     }
@@ -139,6 +166,18 @@ public class GtDialog extends Dialog {
         layoutParams.width = mWidth;
         layoutParams.height = LayoutParams.WRAP_CONTENT;
         webView.setLayoutParams(layoutParams);
+    }
+
+    @Override
+    public void show() {
+        isShowing = true;
+        super.show();
+    }
+
+    @Override
+    public void dismiss() {
+        isShowing = false;
+        super.dismiss();
     }
 
     private class GtWebview extends WebView {
@@ -170,26 +209,76 @@ public class GtDialog extends Dialog {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-
                 // TODO Auto-generated method stub
-                Log.i(ACTIVITY_TAG, "start loading");
 
-                return super.shouldOverrideUrlLoading(view, url);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(url));
+                context.startActivity(intent);
+
+                return true;
             }
 
             @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+            public void onPageStarted(final WebView view, String url, Bitmap favicon) {
                 // TODO Auto-generated method stub
                 Log.i(ACTIVITY_TAG, "webview did start");
                 super.onPageStarted(view, url, favicon);
+
+                timer = new Timer();
+                TimerTask timerTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        ((Activity)context).runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (webView.getProgress() < 100) {
+                                    webView.stopLoading();
+                                    mDialog.dismiss();
+                                    if (gtListener != null) {
+                                        gtListener.gtCallReady(false);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                };
+                timer.schedule(timerTask, mTimeout, 1);
             }
 
             @Override
             public void onPageFinished(WebView view, String url) {
+                timer.cancel();
+                timer.purge();
+                if (debug) {
+                    //当验证无法访问, 可能展示PROXY ERROR
+                    if (gtListener != null) {
+                        gtListener.gtCallReady(false);
+                    }
+                    mDialog.show();
+                }
                 // TODO Auto-generated method stub
                 Log.i(ACTIVITY_TAG, "webview did finish");
                 super.onPageFinished(view, url);
+            }
 
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                //
+                if (gtListener != null) {
+                    gtListener.gtCallReady(false);
+                }
+                super.onReceivedError(view, request, error);
+            }
+
+            @Override
+            public void onReceivedHttpError(
+                    WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+                //
+                if (gtListener != null) {
+                    gtListener.gtCallReady(false);
+                }
+                mDialog.show();
+                super.onReceivedHttpError(view, request, errorResponse);
             }
 
         }
@@ -228,21 +317,24 @@ public class GtDialog extends Dialog {
         public void gtCloseWindow() {
             dismiss();
             if (gtListener != null) {
-                gtListener.closeGt();
+                gtListener.gtCallClose();
             }
         }
 
         @JavascriptInterface
         public void gtReady() {
-            if (gtListener != null) {
-                gtListener.gtCallReady();
-            }
+
             ((Activity)context).runOnUiThread(new Runnable() {
+
                 @Override
                 public void run() {
                     mDialog.show();
                 }
             });
+
+            if (gtListener != null) {
+                gtListener.gtCallReady(true);
+            }
         }
 
     }
