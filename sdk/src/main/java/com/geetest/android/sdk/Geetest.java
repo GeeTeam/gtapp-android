@@ -97,7 +97,7 @@ public class Geetest {
                 success = config.getInt("success");
 
                 if (gt.length() == 32) {
-                    return true;
+                    return getSuccess();
                 }
 
             }

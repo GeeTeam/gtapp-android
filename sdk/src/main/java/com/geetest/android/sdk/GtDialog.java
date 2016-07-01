@@ -3,6 +3,7 @@ package com.geetest.android.sdk;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.lang.Runnable;
+import java.lang.Character.UnicodeBlock;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -44,6 +45,7 @@ public class GtDialog extends Dialog {
     private Boolean success;
     private String product = "embed";
     private String language = "zh-cn";
+    private String mTitle = "";
     private Boolean debug = false;
 
     private Dialog mDialog = this;
@@ -67,13 +69,16 @@ public class GtDialog extends Dialog {
         this.product = product;
     }
 
-    //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn"
-    public void  setLanguage(String lang) {
-        language = lang;
+    //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn".
+    public void setLanguage(String lang) {
+        this.language = lang;
     }
 
+    //验证标题, 默认无标题, 不宜过长.
+    public void setGTTitle(String title) { this.mTitle = title;}
+
     public void setTimeout(int timeout) {
-        mTimeout = timeout;
+        this.mTimeout = timeout;
     }
 
     @Override
@@ -124,14 +129,15 @@ public class GtDialog extends Dialog {
                 + "?gt=" + this.id
                 + "&challenge=" + this.challenge
                 + "&success=" + (this.success ? 1 : 0)
-                + "mType=" + Build.MODEL
+                + "&mType=" + Build.MODEL
                 + "&osType=" + "android"
                 + "&osVerInt=" + Build.VERSION.RELEASE
                 + "&gsdkVerCode=" + "2.16.4.21.1"
+                + "&title=" + this.mTitle //验证标题，不宜过长
                 + "&lang=" + this.language //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn"
                 + "&debug=" + this.debug
-                + "&width=" + (int)(width / scale + 1.5f);//1.5f: fix blank on the webview
-
+                + "&width=" + (int)(mWidth / scale + 1.5f);//1.5f: fix blank on the webview
+        Log.i("GtDialog", "url: " + gt_mobile_req_url);
         webView.loadUrl(gt_mobile_req_url);
 
         webView.buildLayer();
@@ -140,7 +146,7 @@ public class GtDialog extends Dialog {
 
     public interface GtListener {
         //通知native验证已准备完毕
-        void gtCallReady(Boolean status); // true准备完成/false为准备完成
+        void gtCallReady(Boolean status); // true准备完成/false未准备完成
         //通知native关闭验证
         void gtCallClose();
         //通知native验证结果，并准备二次验证

@@ -32,10 +32,10 @@ public class MainActivity extends Activity {
     private Geetest captcha = new Geetest(
 
             // 设置获取id，challenge，success的URL，需替换成自己的服务器URL
-            "http://webapi.geetest.com/apis/start-mobile-captcha/",
+            "http://webapi.geelao.ren:8011/gtcap/start-mobile-captcha/",
 
             // 设置二次验证的URL，需替换成自己的服务器URL
-            "http://webapi.geetest.com/apis/mobile-server-validate/"
+            "http://webapi.geelao.ren:8011/gtcap/gt-server-validate/"
     );
 
     @Override
@@ -106,7 +106,8 @@ public class MainActivity extends Activity {
 
             } else {
 
-                // TODO 极验服务宕机或不可用,使用备用验证
+                // TODO 从API_1获得极验服务宕机或不可用通知, 使用备用验证或静态验证
+                // 静态验证依旧调用上面的openGtTest(_, _, _), 服务器会根据getSuccess()的返回值, 自动切换
                 Toast.makeText(
                         getBaseContext(),
                         "Geetest Server is Down.",
@@ -120,10 +121,10 @@ public class MainActivity extends Activity {
 
     public void openGtTest(Context ctx, String id, String challenge, boolean success) {
 
-        final GtDialog dialog = new GtDialog(ctx, id, challenge, success);
+        GtDialog dialog = new GtDialog(ctx, id, challenge, success);
 
         // 启用debug可以在webview上看到验证过程的一些数据
-        // dialog.setDebug(true);
+//        dialog.setDebug(true);
 
         dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override

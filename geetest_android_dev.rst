@@ -8,7 +8,7 @@ Android-Dev
 ================================================
 
 
-1. 基于安卓4.0, 使用开发工具为android studio 1.5.1, 直接导入本目录即可看到app demo以及sdk的源码
+1. 基于安卓4.0, 使用开发工具为android studio 2.0.0, 直接导入本目录即可看到app demo以及sdk的源码
 2. 极验验证android sdk 通过对安卓的包装，方便安卓工程师集成极验验证的验证前端。
 3. 演示项目提供了用户服务器的预处理以及完整的一次验证，并将客户端验证结果向示例的客户服务器上发起二次验证的完整通讯过程。
 4. sdk 包括 GtDialog, Geetest, DimenTool三个文件. 
@@ -54,9 +54,9 @@ SDK的模块
 
 	public Geetest(String captchaURL, String validateURL);
 
-2. 是否从服务器获取了验证数据
+2. 返回服务器状态
 
-@param boolean true验证配置完成/false未获取验证参数
+@param boolean true正常验证/false等待进入静态验证
 
 .. code::
 	

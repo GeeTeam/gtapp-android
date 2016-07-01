@@ -14,5 +14,6 @@ public class DimenTool {
 	public static int getHeightPx(Context context) {
 		return context.getResources().getDisplayMetrics().heightPixels;
 	}
-	
+
+
 }
