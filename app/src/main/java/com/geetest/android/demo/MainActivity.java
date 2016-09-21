@@ -5,6 +5,7 @@ import java.util.Map;
 
 import android.os.Bundle;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -32,10 +33,10 @@ public class MainActivity extends Activity {
     private Geetest captcha = new Geetest(
 
             // 设置获取id，challenge，success的URL，需替换成自己的服务器URL
-            "http://webapi.geelao.ren:8011/gtcap/start-mobile-captcha/",
+            "http://api.apiapp.cc/gtcap/start-mobile-captcha/",
 
             // 设置二次验证的URL，需替换成自己的服务器URL
-            "http://webapi.geelao.ren:8011/gtcap/gt-server-validate/"
+            "http://api.apiapp.cc/gtcap/gt-server-validate/"
     );
 
     @Override
@@ -54,15 +55,22 @@ public class MainActivity extends Activity {
                         mGtAppDlgTask = gtAppDlgTask;
                         mGtAppDlgTask.execute();
 
-                        progressDialog = ProgressDialog.show(context, null, "Loading", true, true);
-                        progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                            @Override
-                            public void onCancel(DialogInterface dialog) {
-                                toastMsg("user cancel progress dialog");
-                                mGtAppDlgTask.cancel(true);
-                                captcha.cancelReadConnection();
-                            }
-                        });
+                        if (!((Activity) context).isFinishing()) {
+                            progressDialog = ProgressDialog.show(context, null, "Loading", true, true);
+                            progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                                @Override
+                                public void onCancel(DialogInterface dialog) {
+                                    toastMsg("user cancel progress dialog");
+                                    if (mGtAppDlgTask.getStatus() == AsyncTask.Status.RUNNING) {
+                                        Log.i("async task", "status running");
+                                        captcha.cancelReadConnection();
+                                        mGtAppDlgTask.cancel(true);
+                                    } else {
+                                        Log.i("async task", "No thing happen");
+                                    }
+                                }
+                            });
+                        }
                     }
                 });
 
@@ -102,19 +110,19 @@ public class MainActivity extends Activity {
             if (result) {
 
                 // 根据captcha.getSuccess()的返回值 自动推送正常或者离线验证
-                openGtTest(context, captcha.getGt(), captcha.getChallenge(), captcha.getSuccess());
+                if (captcha.getSuccess()) {
+                    openGtTest(context, captcha.getGt(), captcha.getChallenge(), captcha.getSuccess());
+                } else {
+                    // TODO 从API_1获得极验服务宕机或不可用通知, 使用备用验证或静态验证
+                    // 静态验证依旧调用上面的openGtTest(_, _, _), 服务器会根据getSuccess()的返回值, 自动切换
+                    // openGtTest(context, captcha.getGt(), captcha.getChallenge(), captcha.getSuccess());
+                    toastLongTimeMsg("Geetest Server is Down.");
+
+                    // 执行此处网站主的备用验证码方案
+                }
 
             } else {
-
-                // TODO 从API_1获得极验服务宕机或不可用通知, 使用备用验证或静态验证
-                // 静态验证依旧调用上面的openGtTest(_, _, _), 服务器会根据getSuccess()的返回值, 自动切换
-                Toast.makeText(
-                        getBaseContext(),
-                        "Geetest Server is Down.",
-                        Toast.LENGTH_LONG).show();
-
-                // 执行此处网站主的备用验证码方案
-
+                toastLongTimeMsg("Can't Get Data from API_1");
             }
         }
     }
@@ -190,6 +198,12 @@ public class MainActivity extends Activity {
                 }
             }
 
+            @Override
+            public void gtError() {
+                progressDialog.dismiss();
+                toastMsg("Fatal Error Did Occur.");
+            }
+
         });
 
     }
@@ -197,6 +211,12 @@ public class MainActivity extends Activity {
     private void toastMsg(String msg) {
 
         Toast.makeText(getBaseContext(), msg, Toast.LENGTH_SHORT).show();
+
+    }
+
+    private void toastLongTimeMsg(String msg) {
+
+        Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
 
     }
 

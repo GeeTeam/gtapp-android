@@ -25,6 +25,7 @@ import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
 /**
@@ -36,9 +37,10 @@ import android.widget.Toast;
 public class GtDialog extends Dialog {
 
     private String baseURL = "http://static.geetest.com/static/appweb/app-index.html";
-//    private String baseURL = "http://192.168.1.195:8720";
+//    private String baseURL = "http://192.168.1.158:8721";
 
     protected static final String ACTIVITY_TAG="GtDialog";
+    private  TelephonyManager tm;
 
     private String id;
     private String challenge;
@@ -95,6 +97,7 @@ public class GtDialog extends Dialog {
         super(context);
 
         this.context = context;
+        tm = (TelephonyManager)this.context.getSystemService(Context.TELEPHONY_SERVICE);
 
         this.id = id;
         this.challenge = challenge;
@@ -129,6 +132,7 @@ public class GtDialog extends Dialog {
                 + "?gt=" + this.id
                 + "&challenge=" + this.challenge
                 + "&success=" + (this.success ? 1 : 0)
+                + "&imei=" + tm.getDeviceId()
                 + "&mType=" + Build.MODEL
                 + "&osType=" + "android"
                 + "&osVerInt=" + Build.VERSION.RELEASE
@@ -149,6 +153,8 @@ public class GtDialog extends Dialog {
         void gtCallReady(Boolean status); // true准备完成/false未准备完成
         //通知native关闭验证
         void gtCallClose();
+        //通知javascript发生严重错误
+        void  gtError();
         //通知native验证结果，并准备二次验证
         void gtResult(boolean success, String result);
     }
@@ -276,6 +282,14 @@ public class GtDialog extends Dialog {
                 super.onReceivedError(view, request, error);
             }
 
+//            @Override public void onReceivedError(WebView view, int errorCode,
+//                                                  String description, String failingUrl) {
+//                if (gtListener != null) {
+//                    gtListener.gtCallReady(false);
+//                }
+//                super.onReceivedError(view, errorCode, description, failingUrl);
+//            }
+
             @Override
             public void onReceivedHttpError(
                     WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
@@ -340,6 +354,13 @@ public class GtDialog extends Dialog {
 
             if (gtListener != null) {
                 gtListener.gtCallReady(true);
+            }
+        }
+
+        @JavascriptInterface
+        public void gtError() {
+            if (gtListener != null) {
+                gtListener.gtError();
             }
         }
 
