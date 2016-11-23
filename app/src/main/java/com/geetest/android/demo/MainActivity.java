@@ -192,7 +192,7 @@ public class MainActivity extends Activity {
                 if (status) {
                     //TODO 验证加载完成
                     toastMsg("geetest finish load");
-                }else {
+                } else {
                     //TODO 验证加载超时,未准备完成
                     toastMsg("there's a network jam");
                 }

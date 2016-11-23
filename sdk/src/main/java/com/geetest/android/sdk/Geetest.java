@@ -178,9 +178,9 @@ public class Geetest {
                     }
                 }
 
-                sslReadConnection.setDoInput(true);
-                sslReadConnection.setDoOutput(false);
-                sslReadConnection.setRequestMethod("GET");
+//                sslReadConnection.setDoInput(true);
+//                sslReadConnection.setDoOutput(false);
+//                sslReadConnection.setRequestMethod("GET");
 
                 sslReadConnection.setConnectTimeout(mTimeout/2);
 
@@ -339,7 +339,7 @@ public class Geetest {
                     }
                 }
             };
-            timer.schedule(timerTask, mTimeout, 1);
+            timer.schedule(timerTask, mTimeout);
 
             byte[] data = getRequestData(params, encode).toString().getBytes();
 
@@ -422,7 +422,7 @@ public class Geetest {
                     }
                 }
             };
-            timer.schedule(timerTask, mTimeout, 1);
+            timer.schedule(timerTask, mTimeout);
 
             byte[] data = getRequestData(params, encode).toString().getBytes();
 
