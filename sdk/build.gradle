@@ -27,3 +27,13 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
 }
+
+task makeJar(type: Copy) {
+    delete 'build/libs/libgtsdk.jar'
+    from('build/intermediates/bundles/release/')
+    into('build/libs/')
+    include('classes.jar')
+    rename ('classes.jar', 'libgtsdk.jar')
+}
+
+makeJar.dependsOn(build)

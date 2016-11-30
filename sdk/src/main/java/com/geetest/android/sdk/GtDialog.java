@@ -1,6 +1,9 @@
 package com.geetest.android.sdk;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -39,6 +42,9 @@ import android.webkit.WebViewClient;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 /**
  * 验证对话框
  * 
@@ -47,13 +53,15 @@ import android.widget.Toast;
  */
 public class GtDialog extends Dialog {
 
-    private String baseURL = "https://mobilestatic.geetest.com/static/appweb/app-index.html";
+    private String baseURL = "https://static.geetest.com/static/appweb/app-index.html";
     private String baseDomain = "mobilestatic.geetest.com";
+    private String[] staticIPList = {"115.28.113.153"};
 //    private String baseURL = "http://192.168.1.158:8721";
 
     protected static final String ACTIVITY_TAG="GtDialog";
     private  TelephonyManager tm;
 
+    private String mParamsString;
     private String id;
     private String challenge;
     private Boolean success;
@@ -65,6 +73,7 @@ public class GtDialog extends Dialog {
     private Dialog mDialog = this;
     private Context context;
     private int mWidth;
+    private int mHeight;
     private int mTimeout = 10000;//默认10000ms
     private GtWebview webView;
     private Timer domainTimer;
@@ -106,15 +115,16 @@ public class GtDialog extends Dialog {
         webView.stopLoading();
     }
 
-    public GtDialog (Context context, String id, String challenge, Boolean success) {
+    public GtDialog (Context context, JSONObject params) {
         super(context);
 
         this.context = context;
         tm = (TelephonyManager)this.context.getSystemService(Context.TELEPHONY_SERVICE);
 
-        this.id = id;
-        this.challenge = challenge;
-        this.success = success;
+        mParamsString = unwrappingParameters(params);
+//        this.id = id;
+//        this.challenge = challenge;
+//        this.success = success;
 
         init();
     }
@@ -125,33 +135,43 @@ public class GtDialog extends Dialog {
 
         webView.addJavascriptInterface(new JSInterface(), "JSInterface");
 
-        String gt_mobile_req_url = baseURL + getPathUrl();
+        String gt_mobile_req_url = baseURL + getPathUrl(mParamsString);
         Log.i("GtDialog", "url: " + gt_mobile_req_url);
         webView.loadUrl(gt_mobile_req_url);
 
         webView.buildLayer();
     }
 
-    private String getPathUrl() {
-        int height = DimenTool.getHeightPx(getContext());
-        int width = DimenTool.getWidthPx(getContext());
-        float scale = getContext().getResources().getDisplayMetrics().density;
-
-        final int WIDTH = 290;
-
-        if (height < width) {
-            width = height * 3 / 4;
+    private String unwrappingParameters(JSONObject params) {
+        Iterator<String> iter = params.keys();
+        String paramString = "";
+        while (iter.hasNext()) {
+            String key = iter.next();
+            try {
+                if (iter.hasNext()) {
+                    String comp = key + "=" + params.getString(key) + "&";
+                    paramString = paramString + comp;
+                }
+                else {
+                    String comp = key + "=" + params.getString(key);
+                    paramString = paramString + comp;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
-        width = width * 4 / 5;
-        if ((int)(width / scale + 0.5f) < WIDTH) {
-            width = (int)((WIDTH - 0.5f) * scale);
-        }
+        return paramString;
+    }
 
-        mWidth = width;
+    private String getPathUrl(String paramsString) {
 
-        return "?gt=" + this.id
-                + "&challenge=" + this.challenge
-                + "&success=" + (this.success ? 1 : 0)
+        mWidth = getDeviceWidth();
+        mHeight = getDeviceHeight();
+        float scale = getDeviceScale();
+
+        return "?" + paramsString
+//                + "&challenge=" + this.challenge
+//                + "&success=" + (this.success ? 1 : 0)
                 + "&imei=" + tm.getDeviceId()
                 + "&mType=" + Build.MODEL
                 + "&osType=" + "android"
@@ -163,6 +183,36 @@ public class GtDialog extends Dialog {
                 + "&width=" + (int)(mWidth / scale + 1.5f);//1.5f: fix blank on the webview
     }
 
+    private float getDeviceScale() {
+        return getContext().getResources().getDisplayMetrics().density;
+    }
+
+    private int getDeviceWidth() {
+        int height = DimenTool.getHeightPx(getContext());
+        int width = DimenTool.getWidthPx(getContext());
+        float scale = getDeviceScale();
+
+        final int WIDTH = 290;
+
+        if (height < width) {
+            width = height * 3 / 4;
+        }
+        width = width * 4 / 5;
+        if ((int)(width / scale + 0.5f) < WIDTH) {
+            width = (int)((WIDTH - 0.5f) * scale);
+        }
+        return width;
+    }
+
+    private int getDeviceHeight() {
+        int height = DimenTool.getHeightPx(getContext());
+        int width = DimenTool.getWidthPx(getContext());
+        float scale = getContext().getResources().getDisplayMetrics().density;
+
+        final int HEIGHT = 500;
+
+        return (int)(HEIGHT *  scale);
+    }
 
     public interface GtListener {
         //通知native验证已准备完毕
@@ -251,13 +301,13 @@ public class GtDialog extends Dialog {
                     });
                 }
             };
-            domainTimer.schedule(timerTask, 3000);
+            domainTimer.schedule(timerTask, 5000);
 
             super.loadUrl(url);
         }
 
         public void loadIPUrl(String aIP) {
-            String mobile_ip_request_url = "http://" + aIP +"/static/appweb/app-index.html" + getPathUrl();
+            String mobile_ip_request_url = "http://" + aIP +"/static/appweb/app-index.html" + getPathUrl(mParamsString);
             Log.i(ACTIVITY_TAG, "load url: " + mobile_ip_request_url);
             final Map<String, String> additionalHttpHeaders = new HashMap<String, String>();
             additionalHttpHeaders.put("Host", baseDomain);
@@ -370,22 +420,14 @@ public class GtDialog extends Dialog {
 
         @Override
         protected String doInBackground(String... params) {
-            //"115.28.113.153", "120.26.166.8", "139.129.112.74"
-            String ip1 = ping("115.28.113.153", 0);
-            String ip2 = ping("120.26.166.8", 0);
-            String ip3 = ping("139.129.112.74", 0);
-            if (null != ip1) {
-                return ip1;
+            //"115.28.113.153"
+            for (int i = 0; i < staticIPList.length; i++) {
+                String ip = ping(staticIPList[i], 0);
+                if (null != ip) {
+                    return ip;
+                }
             }
-            else if (null != ip2) {
-                return ip2;
-            }
-            else if (null != ip3) {
-                return ip3;
-            }
-            else {
-                return null;
-            }
+            return null;
         }
 
         @Override
@@ -415,7 +457,7 @@ public class GtDialog extends Dialog {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }finally{
+            } finally {
                 try {
                     connect.close();
                 } catch (IOException e) {

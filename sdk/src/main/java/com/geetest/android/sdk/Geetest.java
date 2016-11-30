@@ -3,6 +3,7 @@ package com.geetest.android.sdk;
 import android.text.TextUtils;
 import android.util.Log;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -84,6 +85,7 @@ public class Geetest {
     public interface GeetestListener {
         void readContentTimeout();
         void submitPostDataTimeout();
+        void receiveInvalidParameters();
     }
 
     private GeetestListener geetestListener;
@@ -92,7 +94,7 @@ public class Geetest {
         geetestListener = listener;
     }
 
-    public boolean checkServer() {
+    public JSONObject checkServer() {
 
         try {
 
@@ -104,22 +106,21 @@ public class Geetest {
 
                 JSONObject config = new JSONObject(info);
 
-                gt = config.getString("gt");
-                challenge = config.getString("challenge");
-                success = config.getInt("success");
+                this.gt         = config.getString("gt");
+                this.challenge  = config.getString("challenge");
+                this.success    = config.getInt("success");
 
-                if (gt.length() == 32) {
-                    return getSuccess();
-                }
-
+                return config;
             }
 
         } catch (Exception e) {
-
+            if (geetestListener != null) {
+                geetestListener.receiveInvalidParameters();
+            }
             e.printStackTrace();
         }
 
-        return false;
+        return null;
     }
 
     private String readContentFromGet(String getURL) throws IOException {

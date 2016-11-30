@@ -93,31 +93,36 @@ public class MainActivity extends Activity {
                 //TODO 提交二次验证超时
                 toastMsg("submit error");
             }
+
+            @Override
+            public void receiveInvalidParameters() {
+                //TODO 从API接收到无效的JSON参数
+                toastMsg("Did recieve invalid parameters.");
+            }
         });
     }
 
-    class GtAppDlgTask extends AsyncTask<Void, Void, Boolean> {
+    class GtAppDlgTask extends AsyncTask<Void, Void, JSONObject> {
 
         @Override
-        protected Boolean doInBackground(Void... params) {
+        protected JSONObject doInBackground(Void... params) {
 
             return captcha.checkServer();
         }
 
         @Override
-        protected void onPostExecute(Boolean result) {
+        protected void onPostExecute(JSONObject parmas) {
 
-            if (result) {
+            if (parmas != null) {
 
                 // 根据captcha.getSuccess()的返回值 自动推送正常或者离线验证
                 if (captcha.getSuccess()) {
-                    openGtTest(context, captcha.getGt(), captcha.getChallenge(), captcha.getSuccess());
+                    openGtTest(context, parmas);
                 } else {
                     // TODO 从API_1获得极验服务宕机或不可用通知, 使用备用验证或静态验证
                     // 静态验证依旧调用上面的openGtTest(_, _, _), 服务器会根据getSuccess()的返回值, 自动切换
-                    // openGtTest(context, captcha.getGt(), captcha.getChallenge(), captcha.getSuccess());
+                    // openGtTest(context, params);
                     toastLongTimeMsg("Geetest Server is Down.");
-
                     // 执行此处网站主的备用验证码方案
                 }
 
@@ -127,9 +132,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    public void openGtTest(Context ctx, String id, String challenge, boolean success) {
+    public void openGtTest(Context ctx, JSONObject params) {
 
-        GtDialog dialog = new GtDialog(ctx, id, challenge, success);
+        GtDialog dialog = new GtDialog(ctx, params);
 
         // 启用debug可以在webview上看到验证过程的一些数据
 //        dialog.setDebug(true);
