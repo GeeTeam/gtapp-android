@@ -1,5 +1,6 @@
 package com.geetest.android.sdk;
 
+import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -169,6 +170,16 @@ public class Geetest {
 
                 cookieManager = new CookieManager();
 
+                sslReadConnection.setDoInput(true);
+                sslReadConnection.setDoOutput(false);
+                sslReadConnection.setRequestMethod("GET");
+
+                sslReadConnection.setConnectTimeout(mTimeout/2);
+
+                sslReadConnection.setReadTimeout(mTimeout/2);
+
+                sslReadConnection.connect();
+
                 Map<String, List<String>> headerFields = sslReadConnection.getHeaderFields();
                 if (headerFields.get("Set-Cookie") != null) {
                     List<String> cookiesHeader = headerFields.get("Set-Cookie");
@@ -178,16 +189,6 @@ public class Geetest {
                         }
                     }
                 }
-
-//                sslReadConnection.setDoInput(true);
-//                sslReadConnection.setDoOutput(false);
-//                sslReadConnection.setRequestMethod("GET");
-
-                sslReadConnection.setConnectTimeout(mTimeout/2);
-
-                sslReadConnection.setReadTimeout(mTimeout/2);
-
-                sslReadConnection.connect();
 
                 byte[] buf = new byte[1024];
 
@@ -431,16 +432,16 @@ public class Geetest {
                 HttpURLConnection submitConnection = (HttpURLConnection) url.openConnection();
                 mSubmitConneciton = submitConnection;
 
+                submitConnection.setConnectTimeout(mTimeout);
+                submitConnection.setDoInput(true);
+                submitConnection.setDoOutput(false);
+                submitConnection.setRequestMethod("POST");
+                submitConnection.setUseCaches(false);
+
                 if(cookieManager.getCookieStore().getCookies().size() > 0) {
                     submitConnection.setRequestProperty("Cookie",
                             TextUtils.join(";", cookieManager.getCookieStore().getCookies()));
                 }
-
-                submitConnection.setConnectTimeout(mTimeout);
-                submitConnection.setDoInput(true);
-                submitConnection.setDoOutput(true);
-                submitConnection.setRequestMethod("POST");
-                submitConnection.setUseCaches(false);
 
                 submitConnection.setRequestProperty("Content-Type",
                         "application/x-www-form-urlencoded");

@@ -25,9 +25,10 @@ import com.geetest.android.sdk.GtDialog.GtListener;
 public class MainActivity extends Activity {
 
     private Context context = MainActivity.this;
-    //因为可能用户当时所处在低速高延迟网络，所以异步请求可能在后台用时很久才获取到验证的数据。可以自己设计状态指示器, demo仅作演示。
+    //考虑用户当时可能所处在弱网络环境，所以异步请求可能在后台用时很久才获取到验证的数据。xxdemo仅作演示。
     private ProgressDialog progressDialog;
     private GtAppDlgTask mGtAppDlgTask;
+    private GtAppValidateTask mGtAppValidateTask;
 
     // 创建验证码网络管理器实例
     private Geetest captcha = new Geetest(
@@ -90,6 +91,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void submitPostDataTimeout() {
+                mGtAppValidateTask.cancel(true);
                 //TODO 提交二次验证超时
                 toastMsg("submit error");
             }
@@ -132,6 +134,41 @@ public class MainActivity extends Activity {
         }
     }
 
+    class GtAppValidateTask extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            try {
+                JSONObject res_json = new JSONObject(params[0]);
+
+                Map<String, String> validateParams = new HashMap<String, String>();
+
+                validateParams.put("geetest_challenge", res_json.getString("geetest_challenge"));
+
+                validateParams.put("geetest_validate", res_json.getString("geetest_validate"));
+
+                validateParams.put("geetest_seccode", res_json.getString("geetest_seccode"));
+
+                String response = captcha.submitPostData(validateParams, "utf-8");
+
+                //TODO 验证通过, 获取二次验证响应, 根据响应判断验证是否通过完整验证
+
+                return response;
+
+            } catch (Exception e) {
+
+                e.printStackTrace();
+            }
+
+            return "invalid result";
+        }
+
+        @Override
+        protected void onPostExecute(String params) {
+            toastMsg("server captcha :" + params);
+        }
+    }
+
     public void openGtTest(Context ctx, JSONObject params) {
 
         GtDialog dialog = new GtDialog(ctx, params);
@@ -156,26 +193,9 @@ public class MainActivity extends Activity {
 
                     toastMsg("client captcha succeed:" + result);
 
-                    try {
-                        JSONObject res_json = new JSONObject(result);
-
-                        Map<String, String> params = new HashMap<String, String>();
-
-                        params.put("geetest_challenge", res_json.getString("geetest_challenge"));
-
-                        params.put("geetest_validate", res_json.getString("geetest_validate"));
-
-                        params.put("geetest_seccode", res_json.getString("geetest_seccode"));
-
-                        String response = captcha.submitPostData(params, "utf-8");
-
-                        //TODO 验证通过, 获取二次验证响应, 根据响应判断验证是否通过完整验证
-                        toastMsg("server captcha :" + response);
-
-                    } catch (Exception e) {
-
-                        e.printStackTrace();
-                    }
+                    GtAppValidateTask gtAppValidateTask = new GtAppValidateTask();
+                    mGtAppValidateTask = gtAppValidateTask;
+                    mGtAppValidateTask.execute(result);
 
                 } else {
                     //TODO 验证失败

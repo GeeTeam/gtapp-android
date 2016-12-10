@@ -54,30 +54,23 @@ import org.json.JSONObject;
 public class GtDialog extends Dialog {
 
     private String baseURL = "https://static.geetest.com/static/appweb/app-index.html";
-    private String baseDomain = "mobilestatic.geetest.com";
-    private String[] staticIPList = {"115.28.113.153"};
 //    private String baseURL = "http://192.168.1.158:8721";
 
     protected static final String ACTIVITY_TAG="GtDialog";
     private  TelephonyManager tm;
+    private  Context mContext;
 
     private String mParamsString;
-    private String id;
-    private String challenge;
-    private Boolean success;
     private String product = "embed";
     private String language = "zh-cn";
     private String mTitle = "";
     private Boolean debug = false;
 
     private Dialog mDialog = this;
-    private Context context;
     private int mWidth;
     private int mHeight;
     private int mTimeout = 10000;//默认10000ms
-    private GtWebview webView;
-    private Timer domainTimer;
-    private Timer ipTimer;
+    private GTWebView webView;
 
     public Boolean isShowing = false;
 
@@ -117,25 +110,36 @@ public class GtDialog extends Dialog {
 
     public GtDialog (Context context, JSONObject params) {
         super(context);
-
-        this.context = context;
-        tm = (TelephonyManager)this.context.getSystemService(Context.TELEPHONY_SERVICE);
-
+        mContext = context;
+        tm = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         mParamsString = unwrappingParameters(params);
-//        this.id = id;
-//        this.challenge = challenge;
-//        this.success = success;
-
-        init();
+        init(context);
     }
 
-    private void init() {
+    private void init(Context context) {
 
-        webView = new GtWebview(getContext());
+        webView = new GTWebView(context);
+
+        webView.setGtWebViewListener(new GTWebView.GtWebViewListener() {
+            @Override
+            public void gtCallReady(Boolean status) {
+                if (gtListener != null) {
+                    gtListener.gtCallReady(status);
+                }
+            }
+
+            @Override
+            public void gtError() {
+                if (gtListener != null) {
+                    gtError();
+                }
+            }
+        });
 
         webView.addJavascriptInterface(new JSInterface(), "JSInterface");
 
-        String gt_mobile_req_url = baseURL + getPathUrl(mParamsString);
+        String pathUrl = getPathUrl(mParamsString);
+        String gt_mobile_req_url = baseURL + pathUrl;
         Log.i("GtDialog", "url: " + gt_mobile_req_url);
         webView.loadUrl(gt_mobile_req_url);
 
@@ -255,218 +259,169 @@ public class GtDialog extends Dialog {
     @Override
     public void dismiss() {
         isShowing = false;
+        webView.stopLoading();
+        webView.removeJavascriptInterface("JSInterface");
+//        webView.destroy();
         super.dismiss();
     }
 
-    private class GtWebview extends WebView {
-
-        public GtWebview(Context context) {
-            super(context);
-
-            init(context);
-        }
-
-        private void init(Context context) {
-            WebSettings webSettings = this.getSettings();
-            webSettings.setJavaScriptEnabled(true);
-            webSettings.setLoadWithOverviewMode(true);
-            webSettings.setDomStorageEnabled(true);
-            webSettings.setDatabaseEnabled(true);
-//            webSettings.setSupportZoom(true);
-            webSettings.setUseWideViewPort(true);
-            this.setOverScrollMode(View.OVER_SCROLL_NEVER);
-            this.setHorizontalScrollBarEnabled(false);
-            this.setVerticalScrollBarEnabled(false);
-            this.setWebViewClient(mWebViewClientBase);
-            this.onResume();
-        }
-
-        @Override
-        public void loadUrl(String url) {
-            domainTimer = new Timer();
-            TimerTask timerTask = new TimerTask() {
-                @Override
-                public void run() {
-                    ((Activity)context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (webView.getProgress() < 100) {
-                                webView.stopLoading();
-                                new PingTask().execute();
-
-                                domainTimer.cancel();
-                                domainTimer.purge();
-                            }
-                        }
-                    });
-                }
-            };
-            domainTimer.schedule(timerTask, 5000);
-
-            super.loadUrl(url);
-        }
-
-        public void loadIPUrl(String aIP) {
-            String mobile_ip_request_url = "http://" + aIP +"/static/appweb/app-index.html" + getPathUrl(mParamsString);
-            Log.i(ACTIVITY_TAG, "load url: " + mobile_ip_request_url);
-            final Map<String, String> additionalHttpHeaders = new HashMap<String, String>();
-            additionalHttpHeaders.put("Host", baseDomain);
-            webView.loadUrl(mobile_ip_request_url, additionalHttpHeaders);
-            Log.i(ACTIVITY_TAG, "webview did load ip url");
-            ipTimer = new Timer();
-            TimerTask timerTask1 = new TimerTask() {
-                @Override
-                public void run() {
-                    ((Activity)context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (webView.getProgress() < 100) {
-                                webView.stopLoading();
-                                mDialog.dismiss();
-                                if (gtListener != null) {
-                                    gtListener.gtCallReady(false);
-                                }
-                                ipTimer.cancel();
-                                ipTimer.purge();
-                            }
-                        }
-                    });
-                }
-            };
-            ipTimer.schedule(timerTask1, 10000);
-        }
-
-        private WebViewClientBase mWebViewClientBase = new WebViewClientBase();
-
-        private class WebViewClientBase extends WebViewClient {
-
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                // TODO Auto-generated method stub
-
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(url));
-                context.startActivity(intent);
-
-                return true;
-            }
-
-            @Override
-            public void onPageStarted(final WebView view, String url, Bitmap favicon) {
-                // TODO Auto-generated method stub
-                Log.i(ACTIVITY_TAG, "webview did start");
-                super.onPageStarted(view, url, favicon);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                if (debug) {
-                    //当验证无法访问, 可能展示PROXY ERROR
-                    if (gtListener != null) {
-                        gtListener.gtCallReady(false);
-                    }
-                    mDialog.show();
-                }
-                // TODO Auto-generated method stub
-                Log.i(ACTIVITY_TAG, "webview did finish");
-                super.onPageFinished(view, url);
-            }
-
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                //
-                if (gtListener != null) {
-                    gtListener.gtCallReady(false);
-                }
-                super.onReceivedError(view, request, error);
-            }
-
-            @Override
-            public void onReceivedError(WebView view, int errorCode,
-                                                  String description, String failingUrl) {
-                if (gtListener != null) {
-                    gtListener.gtCallReady(false);
-                }
-                super.onReceivedError(view, errorCode, description, failingUrl);
-            }
-
-//            @TargetApi(23)
+//    private class GtWebview extends WebView {
+//
+//        public GtWebview(Context context) {
+//            super(context);
+//
+//            init(context);
+//        }
+//
+//        private void init(Context context) {
+//            WebSettings webSettings = this.getSettings();
+//            webSettings.setJavaScriptEnabled(true);
+//            webSettings.setLoadWithOverviewMode(true);
+//            webSettings.setDomStorageEnabled(true);
+//            webSettings.setDatabaseEnabled(true);
+////            webSettings.setSupportZoom(true);
+//            webSettings.setUseWideViewPort(true);
+//            this.setOverScrollMode(View.OVER_SCROLL_NEVER);
+//            this.setHorizontalScrollBarEnabled(false);
+//            this.setVerticalScrollBarEnabled(false);
+//            this.setWebViewClient(mWebViewClientBase);
+//            this.onResume();
+//        }
+//
+//        @Override
+//        public void loadUrl(String url) {
+//            domainTimer = new Timer();
+//            TimerTask timerTask = new TimerTask() {
+//                @Override
+//                public void run() {
+//                    ((Activity)context).runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            if (webView.getProgress() < 100) {
+//                                webView.stopLoading();
+//                                new PingTask().execute();
+//
+//                                domainTimer.cancel();
+//                                domainTimer.purge();
+//                            }
+//                        }
+//                    });
+//                }
+//            };
+//            domainTimer.schedule(timerTask, 5000);
+//
+//            super.loadUrl(url);
+//        }
+//
+//        public void loadIPUrl(String aIP) {
+//            String mobile_ip_request_url = "http://" + aIP +"/static/appweb/app-index.html" + getPathUrl(mParamsString);
+//            Log.i(ACTIVITY_TAG, "load url: " + mobile_ip_request_url);
+//            final Map<String, String> additionalHttpHeaders = new HashMap<String, String>();
+//            additionalHttpHeaders.put("Host", baseDomain);
+//            webView.loadUrl(mobile_ip_request_url, additionalHttpHeaders);
+//            Log.i(ACTIVITY_TAG, "webview did load ip url");
+//            ipTimer = new Timer();
+//            TimerTask timerTask1 = new TimerTask() {
+//                @Override
+//                public void run() {
+//                    ((Activity)context).runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            if (webView.getProgress() < 100) {
+//                                webView.stopLoading();
+//                                mDialog.dismiss();
+//                                if (gtListener != null) {
+//                                    gtListener.gtCallReady(false);
+//                                }
+//                                ipTimer.cancel();
+//                                ipTimer.purge();
+//                            }
+//                        }
+//                    });
+//                }
+//            };
+//            ipTimer.schedule(timerTask1, 10000);
+//        }
+//
+//        private WebViewClientBase mWebViewClientBase = new WebViewClientBase();
+//
+//        private class WebViewClientBase extends WebViewClient {
+//
 //            @Override
-//            public void onReceivedHttpError(
-//                    WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+//                // TODO Auto-generated method stub
+//
+//                Intent intent = new Intent(Intent.ACTION_VIEW);
+//                intent.setData(Uri.parse(url));
+//                context.startActivity(intent);
+//
+//                return true;
+//            }
+//
+//            @Override
+//            public void onPageStarted(final WebView view, String url, Bitmap favicon) {
+//                // TODO Auto-generated method stub
+//                Log.i(ACTIVITY_TAG, "webview did start");
+//                super.onPageStarted(view, url, favicon);
+//            }
+//
+//            @Override
+//            public void onPageFinished(WebView view, String url) {
+//                if (debug) {
+//                    //当验证无法访问, 可能展示PROXY ERROR
+//                    if (gtListener != null) {
+//                        gtListener.gtCallReady(false);
+//                    }
+//                    mDialog.show();
+//                }
+//                // TODO Auto-generated method stub
+//                Log.i(ACTIVITY_TAG, "webview did finish");
+//                super.onPageFinished(view, url);
+//            }
+//
+//            @Override
+//            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
 //                //
 //                if (gtListener != null) {
 //                    gtListener.gtCallReady(false);
 //                }
-//                mDialog.show();
-//                super.onReceivedHttpError(view, request, errorResponse);
+//                super.onReceivedError(view, request, error);
 //            }
-
-            @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                //handler.cancel(); 默认的处理方式，WebView变成空白页
-                //handler.process();接受证书
-                //handleMessage(Message msg); 其他处理
-                if (gtListener != null) {
-                    gtListener.gtError();
-                }
-            }
-
-        }
-
-    }
-
-    private class PingTask extends AsyncTask<String, String, String> {
-
-        @Override
-        protected String doInBackground(String... params) {
-            //"115.28.113.153"
-            for (int i = 0; i < staticIPList.length; i++) {
-                String ip = ping(staticIPList[i], 0);
-                if (null != ip) {
-                    return ip;
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (null != result) {
-                webView.loadIPUrl(result);
-            }
-            else {
-                if (gtListener != null) {
-                    gtListener.gtCallReady(false);
-                }
-            }
-        }
-
-        private String ping(String host, int port) {
-            if (port == 0) port = 80;
-
-            Socket connect = new Socket();
-            try {
-                connect.connect(new InetSocketAddress(host, port), 2 * 1000);
-                Log.i(ACTIVITY_TAG, "Ping " + host);
-                if (connect.isConnected()) {
-                    return host;
-                }
-                else {
-                    return null;
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                try {
-                    connect.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            return null;
-        }
-    }
+//
+//            @Override
+//            public void onReceivedError(WebView view, int errorCode,
+//                                                  String description, String failingUrl) {
+//                if (gtListener != null) {
+//                    gtListener.gtCallReady(false);
+//                }
+//                super.onReceivedError(view, errorCode, description, failingUrl);
+//            }
+//
+////            @TargetApi(23)
+////            @Override
+////            public void onReceivedHttpError(
+////                    WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+////                //
+////                if (gtListener != null) {
+////                    gtListener.gtCallReady(false);
+////                }
+////                mDialog.show();
+////                super.onReceivedHttpError(view, request, errorResponse);
+////            }
+//
+//            @Override
+//            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+//                //handler.cancel(); 默认的处理方式，WebView变成空白页
+//                //handler.process();接受证书
+//                //handleMessage(Message msg); 其他处理
+//                if (gtListener != null) {
+//                    gtListener.gtError();
+//                }
+//            }
+//
+//        }
+//
+//    }
 
     public class JSInterface {
 
@@ -507,7 +462,7 @@ public class GtDialog extends Dialog {
         @JavascriptInterface
         public void gtReady() {
 
-            ((Activity)context).runOnUiThread(new Runnable() {
+            ((Activity)mContext).runOnUiThread(new Runnable() {
 
                 @Override
                 public void run() {
