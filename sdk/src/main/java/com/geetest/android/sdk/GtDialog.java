@@ -261,189 +261,38 @@ public class GtDialog extends Dialog {
         isShowing = false;
         webView.stopLoading();
         webView.removeJavascriptInterface("JSInterface");
-//        webView.destroy();
+        webView.removeAllViews();
+        webView.destroy();
         super.dismiss();
     }
-
-//    private class GtWebview extends WebView {
-//
-//        public GtWebview(Context context) {
-//            super(context);
-//
-//            init(context);
-//        }
-//
-//        private void init(Context context) {
-//            WebSettings webSettings = this.getSettings();
-//            webSettings.setJavaScriptEnabled(true);
-//            webSettings.setLoadWithOverviewMode(true);
-//            webSettings.setDomStorageEnabled(true);
-//            webSettings.setDatabaseEnabled(true);
-////            webSettings.setSupportZoom(true);
-//            webSettings.setUseWideViewPort(true);
-//            this.setOverScrollMode(View.OVER_SCROLL_NEVER);
-//            this.setHorizontalScrollBarEnabled(false);
-//            this.setVerticalScrollBarEnabled(false);
-//            this.setWebViewClient(mWebViewClientBase);
-//            this.onResume();
-//        }
-//
-//        @Override
-//        public void loadUrl(String url) {
-//            domainTimer = new Timer();
-//            TimerTask timerTask = new TimerTask() {
-//                @Override
-//                public void run() {
-//                    ((Activity)context).runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            if (webView.getProgress() < 100) {
-//                                webView.stopLoading();
-//                                new PingTask().execute();
-//
-//                                domainTimer.cancel();
-//                                domainTimer.purge();
-//                            }
-//                        }
-//                    });
-//                }
-//            };
-//            domainTimer.schedule(timerTask, 5000);
-//
-//            super.loadUrl(url);
-//        }
-//
-//        public void loadIPUrl(String aIP) {
-//            String mobile_ip_request_url = "http://" + aIP +"/static/appweb/app-index.html" + getPathUrl(mParamsString);
-//            Log.i(ACTIVITY_TAG, "load url: " + mobile_ip_request_url);
-//            final Map<String, String> additionalHttpHeaders = new HashMap<String, String>();
-//            additionalHttpHeaders.put("Host", baseDomain);
-//            webView.loadUrl(mobile_ip_request_url, additionalHttpHeaders);
-//            Log.i(ACTIVITY_TAG, "webview did load ip url");
-//            ipTimer = new Timer();
-//            TimerTask timerTask1 = new TimerTask() {
-//                @Override
-//                public void run() {
-//                    ((Activity)context).runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            if (webView.getProgress() < 100) {
-//                                webView.stopLoading();
-//                                mDialog.dismiss();
-//                                if (gtListener != null) {
-//                                    gtListener.gtCallReady(false);
-//                                }
-//                                ipTimer.cancel();
-//                                ipTimer.purge();
-//                            }
-//                        }
-//                    });
-//                }
-//            };
-//            ipTimer.schedule(timerTask1, 10000);
-//        }
-//
-//        private WebViewClientBase mWebViewClientBase = new WebViewClientBase();
-//
-//        private class WebViewClientBase extends WebViewClient {
-//
-//            @Override
-//            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-//                // TODO Auto-generated method stub
-//
-//                Intent intent = new Intent(Intent.ACTION_VIEW);
-//                intent.setData(Uri.parse(url));
-//                context.startActivity(intent);
-//
-//                return true;
-//            }
-//
-//            @Override
-//            public void onPageStarted(final WebView view, String url, Bitmap favicon) {
-//                // TODO Auto-generated method stub
-//                Log.i(ACTIVITY_TAG, "webview did start");
-//                super.onPageStarted(view, url, favicon);
-//            }
-//
-//            @Override
-//            public void onPageFinished(WebView view, String url) {
-//                if (debug) {
-//                    //当验证无法访问, 可能展示PROXY ERROR
-//                    if (gtListener != null) {
-//                        gtListener.gtCallReady(false);
-//                    }
-//                    mDialog.show();
-//                }
-//                // TODO Auto-generated method stub
-//                Log.i(ACTIVITY_TAG, "webview did finish");
-//                super.onPageFinished(view, url);
-//            }
-//
-//            @Override
-//            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-//                //
-//                if (gtListener != null) {
-//                    gtListener.gtCallReady(false);
-//                }
-//                super.onReceivedError(view, request, error);
-//            }
-//
-//            @Override
-//            public void onReceivedError(WebView view, int errorCode,
-//                                                  String description, String failingUrl) {
-//                if (gtListener != null) {
-//                    gtListener.gtCallReady(false);
-//                }
-//                super.onReceivedError(view, errorCode, description, failingUrl);
-//            }
-//
-////            @TargetApi(23)
-////            @Override
-////            public void onReceivedHttpError(
-////                    WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-////                //
-////                if (gtListener != null) {
-////                    gtListener.gtCallReady(false);
-////                }
-////                mDialog.show();
-////                super.onReceivedHttpError(view, request, errorResponse);
-////            }
-//
-//            @Override
-//            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-//                //handler.cancel(); 默认的处理方式，WebView变成空白页
-//                //handler.process();接受证书
-//                //handleMessage(Message msg); 其他处理
-//                if (gtListener != null) {
-//                    gtListener.gtError();
-//                }
-//            }
-//
-//        }
-//
-//    }
 
     public class JSInterface {
 
         @JavascriptInterface
         public void gtCallBack(String code, String result, String message) {
-            int codeInt;
+            final int fCode;
+            final String fResult = result;
+            final String fMessage = message;
             try {
-                codeInt = Integer.parseInt(code);
-                if (codeInt == 1) {
-                    dismiss();
+                fCode = Integer.parseInt(code);
+                ((Activity)mContext).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
 
-                    if (gtListener != null) {
-                        gtListener.gtResult(true, result);
-                    }
+                        if (fCode == 1) {
+                            dismiss();
 
-                } else {
-                    if (gtListener != null) {
-                        gtListener.gtResult(false, result);
+                            if (gtListener != null) {
+                                gtListener.gtResult(true, fResult);
+                            }
+
+                        } else {
+                            if (gtListener != null) {
+                                gtListener.gtResult(false, fResult);
+                            }
+                        }
                     }
-                    Toast.makeText(getContext(), "message:" + message,
-                            Toast.LENGTH_LONG).show();
-                }
+                });
             } catch (NumberFormatException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
