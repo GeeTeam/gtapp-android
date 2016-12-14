@@ -525,16 +525,16 @@ public class GTWebView extends WebView {
             super.onReceivedError(view, errorCode, description, failingUrl);
         }
 
-            @TargetApi(23)
-            @Override
-            public void onReceivedHttpError(
-                    WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-                //
-                if (gtListener != null) {
-                    gtListener.gtCallReady(false);
-                }
-                super.onReceivedHttpError(view, request, errorResponse);
-            }
+//        @TargetApi(23)
+//        @Override
+//        public void onReceivedHttpError(
+//                WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
+//            //
+//            if (gtListener != null) {
+//                gtListener.gtCallReady(false);
+//            }
+//            super.onReceivedHttpError(view, request, errorResponse);
+//        }
 
         @Override
         public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
