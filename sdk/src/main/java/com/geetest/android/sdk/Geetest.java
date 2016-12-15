@@ -138,7 +138,7 @@ public class Geetest {
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    if (responseCode != HttpURLConnection.HTTP_OK || sBuffer.toString().length() == 0) {
+                    if (responseCode != HttpsURLConnection.HTTP_OK || sBuffer.toString().length() == 0) {
                         if (mSSLReadConnection != null  ) {
                             mSSLReadConnection.disconnect();
                         }
@@ -204,7 +204,7 @@ public class Geetest {
 
                 responseCode = sslReadConnection.getResponseCode();
 
-                if (responseCode == HttpURLConnection.HTTP_OK) {
+                if (responseCode == HttpsURLConnection.HTTP_OK) {
                     timer.cancel();
                     timer.purge();
 
@@ -330,7 +330,7 @@ public class Geetest {
             TimerTask timerTask = new TimerTask() {
                 @Override
                 public void run() {
-                    if (responseCode != HttpURLConnection.HTTP_OK) {
+                    if (responseCode != HttpsURLConnection.HTTP_OK) {
                         if (mSSLSubmitConnection != null) {
                             mSSLSubmitConnection.disconnect();
                         }
@@ -383,7 +383,7 @@ public class Geetest {
 
                 int response = sslSubmitConnection.getResponseCode();
 
-                if (response == HttpURLConnection.HTTP_OK) {
+                if (response == HttpsURLConnection.HTTP_OK) {
                     timer.cancel();
                     timer.purge();
                     InputStream inptStream = sslSubmitConnection.getInputStream();

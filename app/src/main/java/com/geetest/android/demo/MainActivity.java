@@ -99,6 +99,9 @@ public class MainActivity extends Activity {
             @Override
             public void receiveInvalidParameters() {
                 //TODO 从API接收到无效的JSON参数
+                if (progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
                 toastMsg("Did recieve invalid parameters.");
             }
         });
