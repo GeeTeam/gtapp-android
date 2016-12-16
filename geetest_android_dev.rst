@@ -77,6 +77,7 @@ SDK的模块
 	public interface GeetestListener {
         void readContentTimeout();
         void submitPostDataTimeout();
+        void receiveInvalidParameters();
     }
 
 4. 获取用于验证的id
@@ -129,15 +130,11 @@ SDK的模块
 
 @param Context context 上下文
 
-@param String id 验证id
-
-@param String challenge 验证质询/流水号
-
-@param Boolean success 宕机状态
+@param JSONObject params 包含验证初始化参数的JSON对象
 
 .. code::
 
-	public GtDialog (Context context, String id, String challenge, Boolean success);
+	public GtDialog (Context context, JSONObject params);
 
 2. JavascriptInterface回调接口
 
@@ -161,6 +158,9 @@ SDK的模块
 
         //通知native验证结果，并准备二次验证
         void gtResult(boolean success, String result);
+
+        //执行极验的javascript文件报错
+        void gtError();
     }
 
 3. 设置webview超时时长

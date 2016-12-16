@@ -290,7 +290,7 @@ public class Geetest {
                     return sBuffer.toString();
                 }
 
-                if (responseCode == HttpsURLConnection.HTTP_CLIENT_TIMEOUT || responseCode == -1) {
+                if (responseCode == HttpURLConnection.HTTP_CLIENT_TIMEOUT || responseCode == -1) {
                     if (geetestListener != null) {
                         geetestListener.readContentTimeout();
                     }

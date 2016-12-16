@@ -236,15 +236,25 @@ public class MainActivity extends Activity {
 
     }
 
-    private void toastMsg(String msg) {
+    private void toastMsg(final String msg) {
 
-        Toast.makeText(getBaseContext(), msg, Toast.LENGTH_SHORT).show();
+        ((Activity)context).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getBaseContext(), msg, Toast.LENGTH_SHORT).show();
+            }
+        });
 
     }
 
-    private void toastLongTimeMsg(String msg) {
+    private void toastLongTimeMsg(final String msg) {
 
-        Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
+        ((Activity)context).runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getBaseContext(), msg, Toast.LENGTH_LONG).show();
+            }
+        });
 
     }
 
