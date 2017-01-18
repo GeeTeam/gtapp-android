@@ -269,10 +269,8 @@ public class GtDialog extends Dialog {
     public class JSInterface {
 
         @JavascriptInterface
-        public void gtCallBack(String code, String result, String message) {
+        public void gtCallBack(String code, final String result, final String message) {
             final int fCode;
-            final String fResult = result;
-            final String fMessage = message;
             try {
                 fCode = Integer.parseInt(code);
                 ((Activity)mContext).runOnUiThread(new Runnable() {
@@ -283,14 +281,15 @@ public class GtDialog extends Dialog {
                             dismiss();
 
                             if (gtListener != null) {
-                                gtListener.gtResult(true, fResult);
+                                gtListener.gtResult(true, result);
                             }
 
                         } else {
                             if (gtListener != null) {
-                                gtListener.gtResult(false, fResult);
+                                gtListener.gtResult(false, result);
                             }
                         }
+                        Log.i(ACTIVITY_TAG, "result: " + result + ", msg: " + message);
                     }
                 });
             } catch (NumberFormatException e) {
