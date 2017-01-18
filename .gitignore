@@ -1,5 +1,13 @@
 # Created by https://www.gitignore.io/api/android
 
+.idea
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+
 ### Android ###
 # Built application files
 *.apk
