@@ -41,17 +41,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 /**
- * 这个类解析了Android 4.0以下的WebView注入Javascript对象引发的安全漏洞。
- *
- * @author LiHong
- * @since 2013-9-30
+ * 这个类解析了Android 4.2以下的WebView注入Javascript对象引发的安全漏洞
  */
 public class GTWebView extends WebView {
 
     private static final String ACTIVITY_TAG = "GTWebView";
-
-    private String baseDomain = "mobilestatic.geetest.com";
-    private String[] staticIPList = {"115.28.113.153"};
 
     private static final boolean DEBUG = true;
     private static final String VAR_ARG_PREFIX = "arg";
@@ -132,6 +126,7 @@ public class GTWebView extends WebView {
 
     @Override
     public void loadUrl(String url) {
+        /*
         domainTimer = new Timer();
         TimerTask timerTask = new TimerTask() {
             @Override
@@ -151,10 +146,12 @@ public class GTWebView extends WebView {
             }
         };
         domainTimer.schedule(timerTask, 5000);
+        */
 
         super.loadUrl(url);
     }
 
+    /*
     public void loadIPUrl(String aIP, String paramsString) {
         String mobile_ip_request_url = "http://" + aIP +"/static/appweb/app-index.html" + paramsString;
         Log.i(ACTIVITY_TAG, "load url: " + mobile_ip_request_url);
@@ -183,6 +180,7 @@ public class GTWebView extends WebView {
         };
         ipTimer.schedule(timerTask1, 10000);
     }
+    */
 
     @Override
     public void addJavascriptInterface(Object obj, String interfaceName) {
@@ -581,6 +579,7 @@ public class GTWebView extends WebView {
         }
     }
 
+    /*
     private class PingTask extends AsyncTask<String, String, String> {
 
         @Override
@@ -632,4 +631,5 @@ public class GTWebView extends WebView {
             return null;
         }
     }
+    */
 }
