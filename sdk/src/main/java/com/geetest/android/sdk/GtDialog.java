@@ -180,7 +180,7 @@ public class GtDialog extends Dialog {
                 + "&mType=" + Build.MODEL
                 + "&osType=" + "android"
                 + "&osVerInt=" + Build.VERSION.RELEASE
-                + "&gsdkVerCode=" + "2.16.12.15.1"
+                + "&gsdkVerCode=" + "2.17.2.13.1"
                 + "&title=" + this.mTitle //验证标题，不宜过长
                 + "&lang=" + this.language //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn"
                 + "&debug=" + this.debug
