@@ -69,6 +69,8 @@ public class GTWebView extends WebView {
     private Timer domainTimer;
     private Timer ipTimer;
 
+    private boolean isDestroy = false;
+
     private String mParamsString;
 
     public boolean debug = false;
@@ -148,7 +150,17 @@ public class GTWebView extends WebView {
         domainTimer.schedule(timerTask, 5000);
         */
 
+        if (this.isDestroy) {
+            return;
+        }
+
         super.loadUrl(url);
+    }
+
+    @Override
+    public void destroy() {
+        this.isDestroy = true;
+        super.destroy();
     }
 
     /*
