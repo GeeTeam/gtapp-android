@@ -105,6 +105,7 @@ public class GTWebView extends WebView {
 
     private void init(Context context) {
         mContext = context;
+        this.isDestroy = false;
 
         WebSettings webSettings = this.getSettings();
         webSettings.setJavaScriptEnabled(true);
