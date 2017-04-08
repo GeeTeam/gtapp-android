@@ -53,7 +53,8 @@ import org.json.JSONObject;
  */
 public class GtDialog extends Dialog {
 
-    private String baseURL = "https://static.geetest.com/static/appweb/app-index.html";
+//    private String baseURL = hasJellyBeanMR1() ? "https://static.geetest.com/static/appweb/app-index.html" :  "http://static.geetest.com/static/appweb/app-index.html";
+    private  String baseURL = "https://static.geetest.com/static/appweb/app-index.html";
 //    private String baseURL = "http://192.168.1.158:8721";
 
     protected static final String ACTIVITY_TAG="GtDialog";
@@ -184,7 +185,11 @@ public class GtDialog extends Dialog {
                 + "&title=" + this.mTitle //验证标题，不宜过长
                 + "&lang=" + this.language //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn"
                 + "&debug=" + this.debug
-                + "&width=" + (int)(mWidth / scale + 1.5f);//1.5f: fix blank on the webview
+                + "&width=100%";//100%: fix render bug
+    }
+
+    private boolean hasJellyBeanMR1() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1;
     }
 
     private float getDeviceScale() {
