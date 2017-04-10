@@ -53,8 +53,8 @@ import org.json.JSONObject;
  */
 public class GtDialog extends Dialog {
 
-//    private String baseURL = hasJellyBeanMR1() ? "https://static.geetest.com/static/appweb/app-index.html" :  "http://static.geetest.com/static/appweb/app-index.html";
-    private  String baseURL = "https://static.geetest.com/static/appweb/app-index.html";
+    private String baseURL = hasJellyBeanMR1() ? "https://static.geetest.com/static/appweb/app-index.html" :  "http://static.geetest.com/static/appweb/app-index.html";
+//    private  String baseURL = "https://static.geetest.com/static/appweb/app-index.html";
 //    private String baseURL = "http://192.168.1.158:8721";
 
     protected static final String ACTIVITY_TAG="GtDialog";
