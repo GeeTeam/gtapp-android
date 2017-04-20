@@ -36,24 +36,19 @@
 ###Maven
 如需使用maven管理依赖, 需要在你的主工程文件里加入一下配置
 
-maven version|gtapp-android-version
--------------|----------------------
-v1.0.0			|2.16.12.15.1
-
 ```
-allprojects {
-	repositories {
-		jcenter()
-		mavenLocal()//本地
-		maven { url 'https://jitpack.io' }
-		}
-	}
+<dependency>
+  <groupId>gtapp.android</groupId>
+  <artifactId>sdk</artifactId>
+  <version>1.0.0</version>
+  <type>pom</type>
+</dependency>
 ```
-以及
+使用gradle
 
 ```
 dependencies {
-	 compile 'com.github.gtapp-android:sdk:<Maven Version>'
+	 compile 'gtapp.android:sdk:1.0.0'
 	}
 ```
 
