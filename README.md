@@ -40,7 +40,7 @@
 <dependency>
   <groupId>gtapp.android</groupId>
   <artifactId>sdk</artifactId>
-  <version>1.0.0</version>
+  <version>3.0.0</version>
   <type>pom</type>
 </dependency>
 ```
@@ -48,7 +48,7 @@
 
 ```
 dependencies {
-	 compile 'gtapp.android:sdk:1.0.0'
+	 compile 'gtapp.android:sdk:3.0.0'
 	}
 ```
 
