@@ -131,7 +131,7 @@ public class GtDialog extends Dialog {
             @Override
             public void gtError() {
                 if (gtListener != null) {
-                    gtError();
+                    gtListener.gtError();
                 }
             }
         });
@@ -180,11 +180,11 @@ public class GtDialog extends Dialog {
                 + "&mType=" + Build.MODEL
                 + "&osType=" + "android"
                 + "&osVerInt=" + Build.VERSION.RELEASE
-                + "&gsdkVerCode=" + "2.17.2.13.1"
+                + "&gsdkVerCode=" + "2.18.5.21"
                 + "&title=" + this.mTitle //验证标题，不宜过长
                 + "&lang=" + this.language //支持"zh-cn","zh-hk","zh-tw","ko-kr","ja-jp","en-us".默认"zh-cn"
                 + "&debug=" + this.debug
-                + "&width=" + (int)(mWidth / scale + 1.5f);//1.5f: fix blank on the webview
+                + "&width=100%";
     }
 
     private float getDeviceScale() {
